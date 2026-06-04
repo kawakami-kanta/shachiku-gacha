@@ -1,0 +1,2551 @@
+﻿<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>社畜10連ガチャ</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f6f8fb;
+      --muted: #a7b0bd;
+      --line: rgba(255, 255, 255, 0.15);
+      --accent: #37d3c0;
+      --gold: #ffcc4d;
+      --danger: #ff4d5e;
+      font-family: "Segoe UI", "Yu Gothic UI", "Hiragino Sans", Meiryo, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #05070c;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+    }
+
+    button { font: inherit; }
+
+    .stage-shell {
+      width: min(100vw, 177.7778vh);
+      height: min(56.25vw, 100vh);
+      display: grid;
+      place-items: center;
+      background: #05070c;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(55, 211, 192, 0.14), transparent 28%),
+        linear-gradient(145deg, #0a1018, #05070c 58%, #0b0709);
+      transition: background 0.55s ease;
+    }
+
+    .stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        linear-gradient(180deg, rgba(3, 7, 12, 0.28), rgba(3, 7, 12, 0.62)),
+        url("assets/backgrounds/anime-office-bg.png") center / cover no-repeat;
+      opacity: 0.82;
+      transition: opacity 0.45s ease, filter 0.45s ease;
+      pointer-events: none;
+    }
+
+    .stage.playing::before {
+      opacity: 0;
+    }
+
+    .stage.result::before,
+    .stage.detail::before {
+      opacity: 0.92;
+      filter: saturate(1.1) brightness(0.86);
+    }
+
+    .stage.playing {
+      background:
+        linear-gradient(180deg, rgba(20, 31, 43, 0.82) 0 56%, rgba(9, 12, 18, 0.98) 56% 100%),
+        radial-gradient(circle at 50% 0%, rgba(61, 214, 198, 0.18), transparent 35%);
+    }
+
+    .stage.result,
+    .stage.detail {
+      background:
+        radial-gradient(circle at 50% 28%, rgba(255, 204, 77, 0.16), transparent 26%),
+        radial-gradient(circle at 18% 78%, rgba(55, 211, 192, 0.16), transparent 28%),
+        linear-gradient(145deg, #080a13, #15111f 48%, #061820);
+    }
+
+    .intro {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      display: grid;
+      place-items: center;
+      padding: 6%;
+      text-align: center;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .stage.playing .intro,
+    .stage.result .intro,
+    .stage.detail .intro {
+      opacity: 0;
+      transform: translateY(-18px);
+      pointer-events: none;
+    }
+
+    .intro-content {
+      display: grid;
+      justify-items: center;
+      gap: clamp(18px, 2.2vw, 34px);
+    }
+
+    .brand-mini {
+      display: none;
+    }
+
+    .intro h1 {
+      margin: 0;
+      font-size: clamp(34px, 7vw, 118px);
+      line-height: 1;
+      letter-spacing: 0;
+      text-shadow:
+        0 0 30px rgba(55, 211, 192, 0.55),
+        0 0 70px rgba(255, 77, 94, 0.22);
+    }
+
+    .pull-button,
+    .again-button,
+    .title-button,
+    .back-button {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 900;
+      letter-spacing: 0;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.18s ease;
+    }
+
+    .pull-button {
+      width: min(450px, 72vw);
+      min-height: clamp(60px, 7.8vw, 92px);
+      color: #071014;
+      font-size: clamp(19px, 2.25vw, 34px);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), transparent 42%),
+        linear-gradient(135deg, #f8fafc, #ffcc4d 40%, #37d3c0);
+      box-shadow:
+        0 11px 0 #31514d,
+        0 24px 48px rgba(55, 211, 192, 0.28),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.52);
+    }
+
+    .pull-button span {
+      display: block;
+      color: #7f1d1d;
+      font-size: clamp(12px, 1.05vw, 16px);
+      font-weight: 900;
+    }
+
+    .intro-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .menu-button {
+      min-width: 150px;
+      min-height: 38px;
+      padding: 0 18px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 8px;
+      color: #f8fafc;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(15, 118, 110, 0.72));
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      cursor: pointer;
+      font-size: clamp(13px, 1vw, 16px);
+      font-weight: 900;
+    }
+
+    .pull-button:hover,
+    .again-button:hover,
+    .title-button:hover,
+    .menu-button:hover,
+    .back-button:hover {
+      filter: brightness(1.06);
+      transform: translateY(-2px);
+    }
+
+    .pull-button:active,
+    .again-button:active,
+    .title-button:active,
+    .menu-button:active,
+    .back-button:active {
+      transform: translateY(5px);
+    }
+
+    .office {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: scale(1.02);
+      pointer-events: none;
+      transition: opacity 0.55s ease, transform 0.55s ease, filter 0.55s ease;
+    }
+
+    .stage.playing .office {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .stage.result .office,
+    .stage.detail .office {
+      opacity: 0;
+      transform: scale(1.02);
+      filter: blur(2px) saturate(0.7);
+    }
+
+    .result-bg {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.55s ease;
+      background:
+        conic-gradient(from 20deg at 50% 48%, transparent 0deg, rgba(255, 204, 77, 0.1) 16deg, transparent 32deg, rgba(55, 211, 192, 0.1) 52deg, transparent 68deg),
+        repeating-linear-gradient(90deg, transparent 0 72px, rgba(255, 255, 255, 0.04) 73px 74px);
+      mask-image: radial-gradient(circle at 50% 50%, #000 0 72%, transparent 100%);
+    }
+
+    .stage.result .result-bg,
+    .stage.detail .result-bg {
+      opacity: 1;
+      animation: resultRays 18s linear infinite;
+    }
+
+    .ceiling {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 13%;
+      background:
+        linear-gradient(90deg, transparent 0 8%, rgba(255, 255, 255, 0.08) 8.5% 28%, transparent 28.5% 40%, rgba(255, 255, 255, 0.08) 40.5% 63%, transparent 63.5% 73%, rgba(255, 255, 255, 0.08) 73.5% 94%, transparent 94.5%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent);
+    }
+
+    .windows {
+      position: absolute;
+      inset: 15% 6% auto;
+      height: 34%;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.2%;
+      opacity: 0.86;
+    }
+
+    .window {
+      position: relative;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.16);
+      background:
+        linear-gradient(180deg, #15283c, #0c1420 72%),
+        repeating-linear-gradient(90deg, transparent 0 28px, rgba(255, 255, 255, 0.08) 29px 31px);
+      box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .window::before {
+      content: "";
+      position: absolute;
+      inset: 12% 10%;
+      background:
+        linear-gradient(90deg, transparent 0 12%, rgba(255, 204, 77, 0.52) 12.5% 17%, transparent 17.5% 42%, rgba(61, 214, 198, 0.35) 42.5% 48%, transparent 48.5% 70%, rgba(255, 255, 255, 0.25) 70.5% 75%, transparent 75.5%),
+        repeating-linear-gradient(180deg, transparent 0 18px, rgba(255, 255, 255, 0.08) 19px 20px);
+      opacity: 0.8;
+    }
+
+    .desk {
+      position: absolute;
+      left: 4%;
+      right: 4%;
+      bottom: 0;
+      height: 31%;
+      border-top: 4px solid rgba(255, 255, 255, 0.12);
+      background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.2), transparent 16% 84%, rgba(0, 0, 0, 0.24)),
+        linear-gradient(180deg, #654832, #2a1d17);
+    }
+
+    .hud {
+      position: absolute;
+      z-index: 5;
+      top: 4%;
+      left: 4%;
+      right: 4%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      opacity: 0;
+      transform: translateY(-12px);
+      transition: opacity 0.4s ease 0.25s, transform 0.4s ease 0.25s;
+      pointer-events: none;
+    }
+
+    .stage.playing .hud {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .result-label {
+      position: absolute;
+      z-index: 10;
+      top: 4%;
+      left: 4%;
+      opacity: 0;
+      transform: translateY(-10px);
+      color: #f8fafc;
+      font-size: clamp(28px, 4vw, 64px);
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 0 24px rgba(255, 204, 77, 0.42);
+      transition: opacity 0.32s ease, transform 0.32s ease;
+      pointer-events: none;
+    }
+
+    .stage.result .result-label {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .brand-mini {
+      display: none;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .brand-mini h2 {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 48px);
+      line-height: 1;
+      letter-spacing: 0;
+      text-shadow: 0 0 24px rgba(61, 214, 198, 0.5);
+    }
+
+    .brand-mini p {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(10px, 1vw, 15px);
+    }
+
+    .rates {
+      display: none;
+      justify-items: end;
+      gap: 4px;
+      color: #d7e2ed;
+      font-size: clamp(10px, 0.86vw, 14px);
+      text-shadow: 0 0 12px rgba(0, 0, 0, 0.85);
+    }
+
+    .clock-wrap {
+      position: absolute;
+      z-index: 5;
+      top: 14%;
+      right: 8%;
+      display: grid;
+      justify-items: center;
+      gap: 7px;
+      opacity: 0;
+      transform: translateY(-14px) scale(0.92);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .stage.playing .clock-wrap,
+    .stage.result .clock-wrap,
+    .stage.detail .clock-wrap {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .stage.result .clock-wrap,
+    .stage.detail .clock-wrap {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .clock {
+      position: relative;
+      width: clamp(86px, 10vw, 150px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 7px solid #eceff4;
+      background:
+        radial-gradient(circle, #fff 0 5%, transparent 6%),
+        linear-gradient(180deg, #f8fafc, #d9e0e8);
+      box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.35),
+        inset 0 0 0 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .clock::before {
+      content: "12";
+      position: absolute;
+      top: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #1f2937;
+      font-size: clamp(10px, 1vw, 14px);
+      font-weight: 800;
+    }
+
+    .hand {
+      position: absolute;
+      left: 50%;
+      bottom: 50%;
+      width: 4px;
+      border-radius: 999px;
+      transform-origin: 50% 100%;
+      background: #1f2937;
+      transition: transform 1.4s cubic-bezier(.22,.8,.22,1);
+    }
+
+    .clock.instant .hand {
+      transition: none;
+    }
+
+    .hour { height: 26%; transform: translateX(-50%) rotate(270deg); }
+    .minute { height: 37%; transform: translateX(-50%) rotate(0deg); background: #ff4d5e; }
+    .clock.done .hour { transform: translateX(-50%) rotate(540deg); }
+    .clock.done .minute { transform: translateX(-50%) rotate(360deg); }
+    .clock.overtime .hour { transform: translateX(-50%) rotate(780deg); }
+    .clock.overtime .minute { transform: translateX(-50%) rotate(720deg); }
+
+    .time-label {
+      min-width: 90px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      text-align: center;
+      color: #f8fafc;
+      background: rgba(0, 0, 0, 0.42);
+      border: 1px solid var(--line);
+      font-weight: 800;
+      font-size: clamp(12px, 1.2vw, 18px);
+    }
+
+    .laptop {
+      position: absolute;
+      z-index: 4;
+      left: 50%;
+      bottom: 15%;
+      width: min(34vw, 60vh);
+      aspect-ratio: 16 / 10;
+      transform: translateX(-50%) translateY(28px);
+      opacity: 0;
+      border: 7px solid #0a1019;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24%),
+        linear-gradient(145deg, #152235, #071019);
+      box-shadow:
+        0 22px 40px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      transition: opacity 0.45s ease 0.15s, transform 0.45s ease 0.15s;
+    }
+
+    .stage.playing .laptop,
+    .stage.result .laptop,
+    .stage.detail .laptop {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .stage.result .laptop,
+    .stage.detail .laptop {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .laptop::after {
+      content: "";
+      position: absolute;
+      left: -10%;
+      right: -10%;
+      bottom: -15%;
+      height: 18%;
+      border-radius: 0 0 12px 12px;
+      background: linear-gradient(180deg, #1d2733, #0b1118);
+      box-shadow: 0 16px 20px rgba(0, 0, 0, 0.36);
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 6%;
+      background:
+        linear-gradient(90deg, rgba(61, 214, 198, 0.12), transparent 22% 78%, rgba(255, 77, 94, 0.1)),
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 2px 8px);
+    }
+
+    .screen.bluescreen {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24%),
+        linear-gradient(145deg, #0066d9, #003a9b);
+      animation: screenJolt 0.16s linear 8;
+    }
+
+    .screen.bluescreen .screen-title,
+    .screen.bluescreen .screen-body,
+    .screen.bluescreen .screen-status {
+      visibility: hidden;
+    }
+
+    .screen.bluescreen::before {
+      content: ":(";
+      position: absolute;
+      left: 9%;
+      top: 14%;
+      color: rgba(255, 255, 255, 0.94);
+      font-size: clamp(38px, 6vw, 92px);
+      line-height: 1;
+      font-weight: 300;
+    }
+
+    .screen.bluescreen::after {
+      content: "";
+      position: absolute;
+      left: 10%;
+      right: 14%;
+      top: 50%;
+      height: 30%;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0 10%, transparent 10% 23%, rgba(255, 255, 255, 0.75) 23% 31%, transparent 31% 48%, rgba(255, 255, 255, 0.6) 48% 55%, transparent 55%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.72) 0 10px, transparent 10px 17px);
+      opacity: 0.9;
+    }
+
+    .screen-title {
+      color: #d7fff9;
+      font-weight: 800;
+      font-size: clamp(11px, 1.15vw, 18px);
+    }
+
+    .screen-body {
+      display: grid;
+      place-items: center;
+      gap: 7px;
+      text-align: center;
+      color: #c6d3df;
+      font-size: clamp(10px, 1vw, 16px);
+    }
+
+    .pc-icon {
+      width: clamp(44px, 6vw, 88px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px solid rgba(61, 214, 198, 0.7);
+      display: grid;
+      place-items: center;
+      color: #3dd6c6;
+      box-shadow: 0 0 26px rgba(61, 214, 198, 0.25);
+      transition: transform 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+    }
+
+    .pc-icon.punch {
+      transform: scale(1.16);
+      color: #ffcc4d;
+      border-color: #ffcc4d;
+      box-shadow: 0 0 34px rgba(255, 204, 77, 0.44);
+    }
+
+    .pc-icon svg {
+      width: 58%;
+      height: 58%;
+    }
+
+    .screen-status {
+      display: none;
+    }
+
+    .mail-board {
+      position: absolute;
+      z-index: 9;
+      inset: 15% 4.4% 14%;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: clamp(8px, 1vw, 16px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(16px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .mail-board.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .stage.result .mail-board {
+      inset: 13% 3% 22%;
+      gap: clamp(6px, 0.76vw, 12px);
+    }
+
+    .stage.detail .mail-board,
+    .stage.detail .again-area,
+    .stage.detail .status {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .mail {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      opacity: 0;
+      transform: translateY(-22px) scale(0.9);
+    }
+
+    .mail.in {
+      animation: mailIn 0.42s cubic-bezier(.2,.9,.22,1.2) forwards;
+    }
+
+    .mail-card {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto minmax(78px, 42%) auto 1fr auto;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 2px solid var(--rarity-line);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(230, 236, 244, 0.97));
+      color: #111827;
+      box-shadow:
+        0 16px 30px rgba(0, 0, 0, 0.34),
+        0 0 26px var(--rarity-glow);
+      transform: rotateX(8deg);
+      transform-origin: 50% 100%;
+    }
+
+    .stage.result .mail-card,
+    .mail.opened .mail-card {
+      grid-template-rows: auto 1fr;
+      background: rgba(3, 7, 12, 0.5);
+      border-width: 3px;
+      transform: none;
+    }
+
+    .stage.result .mail-head,
+    .stage.result .type-tag,
+    .stage.result .mail-body,
+    .stage.result .mail-foot,
+    .mail.opened .mail-head,
+    .mail.opened .type-tag,
+    .mail.opened .mail-body,
+    .mail.opened .mail-foot {
+      display: none;
+    }
+
+    .result-caption {
+      display: none;
+    }
+
+    .stage.result .result-caption,
+    .mail.opened .result-caption {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: auto auto;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+      min-height: 34px;
+      padding: 5px 7px;
+      color: #f8fafc;
+      background:
+        linear-gradient(135deg, rgba(6, 11, 18, 0.94), rgba(22, 31, 44, 0.86)),
+        var(--rarity-bg);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.65);
+    }
+
+    .result-caption-type,
+    .result-caption-rarity {
+      display: inline-grid;
+      place-items: center;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: 6px;
+      color: #071014;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: clamp(8px, 0.68vw, 11px);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .result-caption-name {
+      display: none;
+    }
+
+    .stage.result .icon-button,
+    .mail.opened .icon-button {
+      height: 100%;
+      border-radius: 5px;
+    }
+
+    .sealed-mail {
+      display: none;
+    }
+
+    .mail.sealed .mail-card {
+      grid-template-rows: 1fr;
+      transform: rotateX(8deg);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(222, 230, 240, 0.98));
+      border-color: var(--rarity-line);
+      box-shadow:
+        0 16px 30px rgba(0, 0, 0, 0.34),
+        0 0 26px var(--rarity-glow);
+    }
+
+    .mail.sealed .mail-head,
+    .mail.sealed .result-caption,
+    .mail.sealed .icon-button,
+    .mail.sealed .type-tag,
+    .mail.sealed .mail-body,
+    .mail.sealed .mail-foot {
+      display: none;
+    }
+
+    .mail.sealed .sealed-mail {
+      position: relative;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.34), transparent 24%),
+        linear-gradient(145deg, rgba(238, 244, 250, 0.96), rgba(214, 224, 236, 0.98));
+    }
+
+    .envelope-svg {
+      position: relative;
+      z-index: 1;
+      width: min(78%, 180px);
+      aspect-ratio: 220 / 140;
+      overflow: visible;
+      filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.18));
+      transform-origin: 50% 55%;
+    }
+
+    .envelope-body {
+      fill: #ffffff;
+      stroke: #251c1b;
+      stroke-width: 8;
+    }
+
+    .envelope-line {
+      fill: none;
+      stroke: #251c1b;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .mail.opening .envelope-svg {
+      animation: envelopeOpen 0.5s ease-in forwards;
+    }
+
+    .mail.opening .sealed-mail {
+      animation: envelopeFade 0.52s ease-in forwards;
+    }
+
+    .mail.sealed.sr .sealed-mail {
+      background:
+        radial-gradient(circle at 22% 22%, rgba(255, 255, 255, 0.38), transparent 22%),
+        linear-gradient(145deg, #d7fff7, #80eadb);
+    }
+
+    .mail.sealed.ssr .mail-card {
+      border-color: rgba(255, 204, 77, 1);
+      box-shadow:
+        0 0 26px rgba(255, 204, 77, 0.62),
+        0 0 42px rgba(245, 158, 11, 0.42);
+    }
+
+    .mail.sealed.ssr .sealed-mail {
+      background:
+        radial-gradient(circle at 24% 24%, rgba(255, 255, 255, 0.5), transparent 21%),
+        linear-gradient(145deg, #fff7c2, #ffcc4d 52%, #f59e0b);
+    }
+
+    .mail.sealed.ur .mail-card {
+      border-color: transparent;
+      background:
+        linear-gradient(rgba(3, 7, 12, 0.62), rgba(3, 7, 12, 0.62)) padding-box,
+        conic-gradient(from 0deg, #ff4d5e, #ffcc4d, #37d3c0, #60a5fa, #c084fc, #ff4d5e) border-box;
+      box-shadow:
+        0 0 28px rgba(255, 204, 77, 0.6),
+        0 0 48px rgba(96, 165, 250, 0.44);
+      animation: rainbowMail 2.2s linear infinite;
+    }
+
+    .mail.sealed.ur .sealed-mail {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.72), transparent 42%),
+        conic-gradient(from 0deg, #ff4d5e, #ffcc4d, #37d3c0, #60a5fa, #c084fc, #ff4d5e);
+      background-size: 100% 100%;
+    }
+
+    .mail-head {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: clamp(6px, 0.62vw, 10px);
+      color: white;
+      background: var(--rarity-bg);
+      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    .mail-from {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-weight: 800;
+      font-size: clamp(9px, 0.86vw, 13px);
+    }
+
+    .rarity {
+      flex: 0 0 auto;
+      min-width: 34px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      padding: 0 7px;
+      color: #071018;
+      background: rgba(255, 255, 255, 0.92);
+      font-weight: 900;
+      font-size: clamp(10px, 0.9vw, 14px);
+    }
+
+    .icon-button {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      padding: 0;
+      overflow: hidden;
+      cursor: pointer;
+      background: #0b1218;
+    }
+
+    .icon-button img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    .icon-button:hover img {
+      transform: scale(1.05);
+      filter: brightness(1.08);
+    }
+
+    .new-badge {
+      position: absolute;
+      left: 7px;
+      bottom: 7px;
+      z-index: 3;
+      padding: 3px 6px;
+      border-radius: 5px;
+      color: #071014;
+      background: linear-gradient(135deg, #ffffff, #ffcc4d 58%, #37d3c0);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.34),
+        0 0 14px rgba(255, 204, 77, 0.42);
+      font-size: clamp(8px, 0.7vw, 11px);
+      font-weight: 1000;
+      line-height: 1;
+      pointer-events: none;
+      letter-spacing: 0;
+    }
+
+    .type-tag {
+      position: relative;
+      z-index: 1;
+      width: fit-content;
+      max-width: calc(100% - 16px);
+      margin: clamp(5px, 0.48vw, 8px) 8px 0;
+      padding: 3px 7px;
+      border-radius: 6px;
+      color: #0b1218;
+      background: rgba(255, 255, 255, 0.8);
+      font-size: clamp(8px, 0.75vw, 11px);
+      font-weight: 900;
+    }
+
+    .mail.character .type-tag {
+      background: #d9fff9;
+      color: #064e46;
+    }
+
+    .mail.skill .type-tag {
+      background: #ffe8b0;
+      color: #6a3508;
+    }
+
+    .mail-body {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      align-content: center;
+      gap: 5px;
+      padding: clamp(6px, 0.62vw, 10px);
+      min-width: 0;
+    }
+
+    .subject {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: clamp(10px, 0.95vw, 15px);
+      font-weight: 900;
+    }
+
+    .mail-preview {
+      display: -webkit-box;
+      min-height: 2.65em;
+      overflow: hidden;
+      color: #475569;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      font-size: clamp(8px, 0.78vw, 12px);
+      line-height: 1.34;
+    }
+
+    .mail-foot {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 clamp(7px, 0.68vw, 11px) clamp(6px, 0.62vw, 9px);
+      color: #64748b;
+      font-size: clamp(8px, 0.7vw, 11px);
+      font-weight: 700;
+    }
+
+    .mail.r { --rarity-bg: linear-gradient(135deg, #64748b, #334155); --rarity-line: rgba(203, 213, 225, 0.9); --rarity-glow: rgba(148, 163, 184, 0.32); }
+    .mail.sr { --rarity-bg: linear-gradient(135deg, #0891b2, #22c55e); --rarity-line: rgba(45, 212, 191, 0.95); --rarity-glow: rgba(45, 212, 191, 0.5); }
+    .mail.ssr { --rarity-bg: linear-gradient(135deg, #f59e0b, #ef4444); --rarity-line: rgba(251, 191, 36, 1); --rarity-glow: rgba(251, 191, 36, 0.68); }
+    .mail.ur { --rarity-bg: linear-gradient(135deg, #020617, #7f1d1d 60%, #111827); --rarity-line: rgba(255, 77, 94, 1); --rarity-glow: rgba(255, 77, 94, 0.9); }
+
+    .mail.ur .mail-card {
+      color: #f8fafc;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255, 77, 94, 0.32), transparent 38%),
+        linear-gradient(180deg, #101217, #050608);
+    }
+
+    .mail.ur .mail-preview,
+    .mail.ur .mail-foot { color: #d3a2a8; }
+
+    .mail.ur .subject {
+      color: #fff;
+      text-shadow: 0 0 18px rgba(255, 77, 94, 0.7);
+    }
+
+    .stage.result .mail.ur .mail-card {
+      border-color: transparent;
+      background:
+        linear-gradient(rgba(3, 7, 12, 0.8), rgba(3, 7, 12, 0.8)) padding-box,
+        conic-gradient(from 0deg, #ff4d5e, #ffcc4d, #37d3c0, #60a5fa, #c084fc, #ff4d5e) border-box;
+      box-shadow:
+        0 0 26px rgba(255, 204, 77, 0.55),
+        0 0 42px rgba(55, 211, 192, 0.42);
+      animation: rainbowMail 2.2s linear infinite;
+    }
+
+    .stage.result .mail.ur .result-caption {
+      background:
+        linear-gradient(90deg, #ff4d5e, #ffcc4d, #37d3c0, #60a5fa, #c084fc, #ff4d5e);
+      background-size: 220% 100%;
+      color: #061018;
+      text-shadow: none;
+      animation: rainbowCaption 2.2s linear infinite;
+    }
+
+    .again-area {
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      bottom: 2.2%;
+      transform: translateX(-50%) translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .stage.result .again-area {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .again-button,
+    .title-button,
+    .back-button {
+      min-width: 150px;
+      min-height: 38px;
+      padding: 0 16px;
+      color: #071014;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), transparent 45%),
+        linear-gradient(135deg, #f8fafc, #ffcc4d 45%, #37d3c0);
+      box-shadow:
+        0 4px 0 #31514d,
+        0 12px 24px rgba(55, 211, 192, 0.2);
+      font-size: clamp(12px, 1vw, 16px);
+    }
+
+    .title-button {
+      color: #f8fafc;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 45%),
+        linear-gradient(135deg, #111827, #243144 48%, #0f766e);
+      box-shadow:
+        0 4px 0 #071014,
+        0 12px 24px rgba(15, 118, 110, 0.22);
+    }
+
+    .status {
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      bottom: 9.4%;
+      width: min(70vw, 900px);
+      min-height: 24px;
+      transform: translateX(-50%);
+      color: #d8e2ed;
+      text-align: center;
+      opacity: 0;
+      font-size: clamp(11px, 1.05vw, 16px);
+      text-shadow: 0 0 14px rgba(0, 0, 0, 0.9);
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .stage.playing .status { opacity: 0; }
+
+    .flash,
+    .special,
+    .detail-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .flash {
+      z-index: 12;
+      opacity: 0;
+      background: white;
+    }
+
+    .flash.pop { animation: flashPop 0.72s ease-out forwards; }
+
+    .special {
+      z-index: 11;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transform: scale(1.04);
+    }
+
+    .special.show {
+      animation: specialIn 3s ease-in-out forwards;
+    }
+
+    .special-card {
+      width: min(52vw, 880px);
+      min-height: min(28vw, 360px);
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      padding: 34px;
+      border-radius: 8px;
+      border: 3px solid rgba(255, 255, 255, 0.45);
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(255, 77, 94, 0.34), transparent 46%),
+        linear-gradient(145deg, rgba(1, 4, 10, 0.95), rgba(80, 13, 20, 0.92));
+      box-shadow:
+        0 0 90px rgba(255, 77, 94, 0.45),
+        inset 0 0 42px rgba(255, 255, 255, 0.08);
+    }
+
+    .special-icon {
+      font-size: clamp(42px, 6vw, 90px);
+      line-height: 1;
+      filter: drop-shadow(0 0 18px rgba(255, 204, 77, 0.72));
+    }
+
+    .special-title {
+      margin: 0;
+      color: #fff;
+      font-size: clamp(24px, 4vw, 68px);
+      line-height: 1.05;
+      text-shadow: 0 0 22px rgba(255, 77, 94, 0.88);
+    }
+
+    .special-copy {
+      margin: 0;
+      color: #ffd7dc;
+      font-weight: 800;
+      font-size: clamp(12px, 1.25vw, 20px);
+    }
+
+    .special.phone .special-card { background: radial-gradient(circle, rgba(255, 204, 77, 0.32), transparent 45%), linear-gradient(145deg, #090909, #5b1115); }
+    .special.alert .special-card { background: repeating-linear-gradient(45deg, rgba(255, 204, 77, 0.12) 0 18px, transparent 18px 36px), linear-gradient(145deg, #050608, #4a0c12); }
+    .special.meeting .special-card { background: radial-gradient(circle at 50% 50%, rgba(61, 214, 198, 0.22), transparent 48%), linear-gradient(145deg, #050608, #38101f); }
+    .special.audit .special-card { background: repeating-linear-gradient(0deg, rgba(61, 214, 198, 0.12) 0 2px, transparent 2px 8px), linear-gradient(145deg, #03050a, #3a0811); }
+    .special.emergency .special-card {
+      border-color: rgba(255, 204, 77, 0.92);
+      background:
+        repeating-linear-gradient(135deg, rgba(255, 204, 77, 0.18) 0 18px, rgba(0, 0, 0, 0.2) 18px 36px),
+        radial-gradient(circle at 50% 42%, rgba(255, 77, 94, 0.5), transparent 48%),
+        linear-gradient(145deg, #090607, #620b14 56%, #0a0506);
+      box-shadow:
+        0 0 120px rgba(255, 77, 94, 0.64),
+        inset 0 0 48px rgba(255, 204, 77, 0.16);
+      animation: emergencyShake 0.42s steps(2, end) infinite;
+    }
+
+    .flash.emergency-pop {
+      animation: emergencyFlash 1.1s ease-out forwards;
+      background:
+        repeating-linear-gradient(90deg, rgba(255, 204, 77, 0.36) 0 22px, rgba(255, 77, 94, 0.54) 22px 44px),
+        rgba(255, 0, 24, 0.45);
+    }
+
+    .detail-overlay {
+      z-index: 13;
+      display: grid;
+      place-items: center;
+      padding: 4%;
+      opacity: 0;
+      transform: translateY(18px) scale(0.98);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      background: #05070c;
+    }
+
+    .stage.detail .detail-overlay {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      background:
+        radial-gradient(circle at 78% 18%, rgba(55, 211, 192, 0.16), transparent 30%),
+        radial-gradient(circle at 24% 82%, rgba(255, 204, 77, 0.12), transparent 32%),
+        #05070c;
+    }
+
+    .stage.detail .result-bg,
+    .stage.detail .office,
+    .stage.detail .clock-wrap,
+    .stage.detail .laptop {
+      opacity: 0;
+    }
+
+    .detail-card {
+      position: relative;
+      width: min(88vw, 142vh);
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 3px solid rgba(205, 217, 232, 0.8);
+      background: #edf2f7;
+      isolation: isolate;
+      box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.58),
+        0 0 70px rgba(55, 211, 192, 0.24);
+    }
+
+    .detail-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.85), transparent 26%),
+        linear-gradient(145deg, #f8fafc, #dce6f1);
+    }
+
+    .detail-card img {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      opacity: 1;
+      background:
+        radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.82), transparent 28%),
+        linear-gradient(145deg, #f8fafc, #dce6f1);
+      mix-blend-mode: normal;
+    }
+
+    .detail-rarity-large {
+      position: absolute;
+      left: clamp(22px, 4.2%, 58px);
+      top: clamp(20px, 4.2%, 52px);
+      z-index: 4;
+      min-width: clamp(62px, 6vw, 96px);
+      height: clamp(50px, 4.8vw, 72px);
+      display: grid;
+      place-items: center;
+      padding: 0 14px;
+      border-radius: 10px;
+      color: #071014;
+      background: linear-gradient(135deg, #ffffff, #dfe7ef);
+      border: 3px solid rgba(255, 255, 255, 0.92);
+      box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.38),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.36);
+      font-size: clamp(24px, 3vw, 44px);
+      font-weight: 1000;
+      line-height: 1;
+      letter-spacing: 0;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+    }
+
+    .detail-rarity-large[data-rarity="SR"] {
+      background: linear-gradient(135deg, #dffff9, #5eead4);
+      box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.38),
+        0 0 28px rgba(55, 211, 192, 0.46);
+    }
+
+    .detail-rarity-large[data-rarity="SSR"] {
+      background: linear-gradient(135deg, #fff7c2, #ffcc4d 55%, #f59e0b);
+      box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.38),
+        0 0 30px rgba(255, 204, 77, 0.54);
+    }
+
+    .detail-rarity-large[data-rarity="UR"] {
+      color: #ffffff;
+      background: conic-gradient(from 0deg, #ff4d5e, #ffcc4d, #37d3c0, #60a5fa, #c084fc, #ff4d5e);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.68);
+      box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.42),
+        0 0 34px rgba(255, 204, 77, 0.55),
+        0 0 52px rgba(96, 165, 250, 0.42);
+    }
+
+    .detail-frame {
+      position: absolute;
+      right: 4%;
+      bottom: 5%;
+      z-index: 2;
+      width: min(42%, 520px);
+      min-height: 28%;
+      display: grid;
+      gap: 7px;
+      align-content: center;
+      padding: clamp(12px, 1.5vw, 24px);
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.38);
+      color: #f8fafc;
+      background: #101722;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+    }
+
+    .detail-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .detail-tag {
+      width: fit-content;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: #071014;
+      background: #f8fafc;
+      font-size: clamp(10px, 0.85vw, 13px);
+      font-weight: 900;
+    }
+
+    #detailRarity {
+      display: none;
+    }
+
+    .detail-title {
+      margin: 0;
+      font-size: clamp(19px, 2.1vw, 34px);
+      line-height: 1.08;
+      letter-spacing: 0;
+      text-shadow: 0 0 18px rgba(255, 255, 255, 0.25);
+    }
+
+    .detail-desc {
+      margin: 0;
+      color: #d8e2ed;
+      font-size: clamp(12px, 1.05vw, 17px);
+      line-height: 1.45;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 14;
+      display: none;
+      padding: 4%;
+      overflow: auto;
+      background:
+        radial-gradient(circle at 70% 20%, rgba(55, 211, 192, 0.14), transparent 30%),
+        rgba(3, 7, 12, 0.94);
+    }
+
+    .modal-overlay.show {
+      display: grid;
+      place-items: center;
+    }
+
+    .modal-panel {
+      width: min(1120px, 92vw);
+      height: min(86vh, 760px);
+      max-height: 86vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 12px;
+      padding: clamp(12px, 1.6vw, 22px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #f8fafc;
+      background: linear-gradient(145deg, #09111c, #101827);
+      box-shadow: 0 26px 80px rgba(0, 0, 0, 0.56);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: clamp(22px, 2.6vw, 40px);
+      letter-spacing: 0;
+    }
+
+    .modal-close {
+      min-width: 88px;
+      min-height: 34px;
+      border: 0;
+      border-radius: 8px;
+      color: #071014;
+      background: linear-gradient(135deg, #f8fafc, #ffcc4d 48%, #37d3c0);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .rarity-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .rarity-tab {
+      min-width: 64px;
+      height: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 8px;
+      color: #d8e2ed;
+      background: rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .rarity-tab.active {
+      color: #071014;
+      background: linear-gradient(135deg, #ffffff, #5eead4);
+    }
+
+    .gallery-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(56px, 8.2vw, 86px), clamp(56px, 8.2vw, 86px))) !important;
+      grid-auto-rows: clamp(56px, 8.2vw, 86px) !important;
+      justify-content: start;
+      align-content: start;
+      gap: 8px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      padding: 2px 6px 4px 2px;
+    }
+
+    .gallery-card {
+      position: relative;
+      aspect-ratio: 1;
+      width: 100%;
+      height: auto;
+      overflow: hidden;
+      border: 2px solid rgba(148, 163, 184, 0.58);
+      border-radius: 8px;
+      background: #111827;
+    }
+
+    .gallery-card button {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .gallery-card img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .gallery-card.locked img {
+      filter: brightness(0.42) saturate(0.35);
+    }
+
+    .unknown-icon {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: #d8e2ed;
+      background:
+        radial-gradient(circle at 50% 36%, rgba(255, 255, 255, 0.12), transparent 30%),
+        linear-gradient(145deg, #1f2937, #0f172a);
+      font-size: clamp(34px, 5.2vw, 54px);
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .count-badge {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      min-width: 34px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      padding: 0 7px;
+      border-radius: 999px;
+      color: #071014;
+      background: rgba(255, 255, 255, 0.92);
+      font-size: 12px;
+      font-weight: 1000;
+    }
+
+    .rates-list {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      gap: 14px;
+      padding: 0 8px 18px 0;
+      text-align: left;
+    }
+
+    #ratesOverlay {
+      padding: clamp(10px, 2.5vw, 24px);
+      overflow: hidden;
+    }
+
+    #ratesOverlay.show {
+      place-items: stretch;
+    }
+
+    #ratesOverlay .modal-panel {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    .rate-section {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .rate-section h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .rate-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.7fr) 1fr;
+      gap: 8px;
+      color: #d8e2ed;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .back-button {
+      position: absolute;
+      top: clamp(20px, 4.2%, 52px);
+      right: clamp(22px, 4.2%, 58px);
+      z-index: 4;
+      min-width: 104px;
+      min-height: 36px;
+    }
+
+    @keyframes resultRays {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes mailIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes envelopeOpen {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      48% { transform: translateY(-3%) scale(1.04); opacity: 1; }
+      100% { transform: translateY(-8%) scale(0.9); opacity: 0; }
+    }
+
+    @keyframes envelopeFade {
+      0%, 70% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.92); }
+    }
+
+    @keyframes flashPop {
+      0% { opacity: 0; }
+      16% { opacity: 0.88; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes emergencyFlash {
+      0% { opacity: 0; }
+      12% { opacity: 0.92; }
+      24% { opacity: 0.12; }
+      38% { opacity: 0.78; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes specialIn {
+      0% { opacity: 0; transform: scale(1.1); filter: blur(10px); }
+      18% { opacity: 1; transform: scale(1); filter: blur(0); }
+      78% { opacity: 1; transform: scale(1); filter: blur(0); }
+      100% { opacity: 0; transform: scale(0.98); filter: blur(8px); }
+    }
+
+    @keyframes emergencyShake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      35% { transform: translate(-5px, 2px) rotate(-0.6deg); }
+      70% { transform: translate(5px, -2px) rotate(0.6deg); }
+    }
+
+    @keyframes rainbowMail {
+      to { filter: hue-rotate(360deg); }
+    }
+
+    @keyframes rainbowCaption {
+      to { background-position: 220% 0; }
+    }
+
+    @keyframes screenJolt {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(2px, -1px); }
+      50% { transform: translate(-1px, 2px); }
+      75% { transform: translate(1px, 1px); }
+    }
+
+    @media (max-width: 760px) {
+      .rates { display: none; }
+      .clock-wrap { right: 5%; top: 14%; }
+      .laptop { width: 42vw; bottom: 17%; }
+      .mail-board,
+      .stage.result .mail-board { inset: 13% 2.2% 24%; gap: 5px; }
+      .mail-card { grid-template-rows: auto minmax(54px, 38%) auto 1fr; }
+      .mail-head { padding: 5px; }
+      .mail-body { padding: 6px; }
+      .mail-foot { display: none; }
+      .rarity { min-width: 28px; height: 20px; padding: 0 5px; }
+      .again-area { bottom: 3%; gap: 6px; }
+      .again-button,
+      .title-button {
+        min-width: 126px;
+        min-height: 32px;
+        padding: 0 11px;
+        font-size: 12px;
+      }
+      .detail-frame {
+        width: 52%;
+        min-height: 34%;
+        right: 2.5%;
+        bottom: 3%;
+      }
+      .back-button {
+        min-width: 88px;
+        min-height: 34px;
+      }
+      .modal-overlay { padding: 2.5%; }
+      .modal-panel {
+        width: 95vw;
+        height: 90vh;
+        gap: 8px;
+        padding: 10px;
+      }
+      .modal-head h2 { font-size: 22px; }
+      .modal-close {
+        min-width: 72px;
+        min-height: 30px;
+      }
+      .rarity-tabs { gap: 6px; }
+      .rarity-tab {
+        min-width: 52px;
+        height: 28px;
+      }
+      .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+        grid-auto-rows: minmax(62px, 1fr);
+        gap: 5px;
+      }
+      .unknown-icon { font-size: clamp(26px, 8vw, 38px); }
+      .count-badge {
+        right: 4px;
+        bottom: 4px;
+        min-width: 28px;
+        height: 18px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage-shell" aria-label="社畜10連ガチャ">
+    <section class="stage intro-mode" id="stage">
+      <div class="result-bg" aria-hidden="true"></div>
+
+      <div class="office" aria-hidden="true">
+        <div class="ceiling"></div>
+        <div class="windows">
+          <div class="window"></div>
+          <div class="window"></div>
+          <div class="window"></div>
+          <div class="window"></div>
+          <div class="window"></div>
+        </div>
+        <div class="desk"></div>
+      </div>
+
+      <header class="hud">
+        <div class="brand-mini">
+          <h2>社畜10連ガチャ</h2>
+          <p>打刻した瞬間、未読メールが10通届く</p>
+        </div>
+        <div class="rates" aria-label="排出率">
+          <div>通常: UR 1% / SSR 4% / SR 15% / R 80%</div>
+          <div>10枚目: UR 1% / SSR 4% / SR 95%</div>
+          <div>タイプ: キャラ 25% / スキル 75%</div>
+        </div>
+      </header>
+
+      <div class="clock-wrap" aria-label="退勤時刻">
+        <div class="clock" id="clock">
+          <div class="hand hour"></div>
+          <div class="hand minute"></div>
+        </div>
+        <div class="time-label" id="timeLabel">9:00</div>
+      </div>
+
+      <div class="laptop" aria-hidden="true">
+        <div class="screen" id="screenPanel">
+          <div class="screen-title">勤怠システム</div>
+          <div class="screen-body">
+            <div class="pc-icon" id="pcIcon">
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <path fill="currentColor" d="M14 20h72v48H14zm8 8v32h56V28zM39 74h22l5 8H34z"/>
+              </svg>
+            </div>
+            <strong id="screenMain">退勤待機中</strong>
+          </div>
+          <div class="screen-status" id="screenStatus">ステータス: 仕事は終わった気がする</div>
+        </div>
+      </div>
+
+      <div class="mail-board" id="mailBoard" aria-live="polite"></div>
+      <div class="result-label" aria-hidden="true">結果</div>
+      <div class="special" id="special" aria-hidden="true"></div>
+      <div class="flash" id="flash"></div>
+
+      <div class="intro">
+        <div class="intro-content">
+          <h1>社畜10連ガチャ</h1>
+          <button class="pull-button" id="pullButton" type="button">
+            10連ガチャ
+            <span>SR以上1枚確定</span>
+          </button>
+          <div class="intro-actions">
+            <button class="menu-button" id="galleryButton" type="button">ギャラリー</button>
+            <button class="menu-button" id="ratesButton" type="button">提供割合</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="again-area">
+        <button class="again-button" id="againButton" type="button">もう一度引く</button>
+        <button class="title-button" id="titleButton" type="button">タイトルへ戻る</button>
+      </div>
+
+      <div class="status" id="status">9:00から18:00まで、社畜の一日が進みます</div>
+
+      <div class="detail-overlay" id="detailOverlay" aria-hidden="true">
+        <div class="detail-card">
+          <button class="back-button" id="backButton" type="button">戻る</button>
+          <div class="detail-rarity-large" id="detailRarityLarge" data-rarity="R">R</div>
+          <img id="detailImage" alt="">
+          <div class="detail-frame">
+            <div class="detail-tags">
+              <span class="detail-tag" id="detailType">スキル</span>
+              <span class="detail-tag" id="detailRarity">R</span>
+            </div>
+            <h3 class="detail-title" id="detailTitle"></h3>
+            <p class="detail-desc" id="detailDesc"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="galleryOverlay" aria-hidden="true">
+        <div class="modal-panel">
+          <div class="modal-head">
+            <h2>ギャラリー</h2>
+            <button class="modal-close" id="galleryClose" type="button">戻る</button>
+          </div>
+          <div class="rarity-tabs" id="galleryTabs"></div>
+          <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="ratesOverlay" aria-hidden="true">
+        <div class="modal-panel">
+          <div class="modal-head">
+            <h2>提供割合</h2>
+            <button class="modal-close" id="ratesClose" type="button">戻る</button>
+          </div>
+          <div class="rates-list" id="ratesList"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const items = {
+      character: [
+        { id: "c-r-01", rarity: "R", title: "付箋だらけの新人", desc: "頼まれるたびにメモが増える。まだ目に光がある。", motif: "memo" },
+        { id: "c-r-02", rarity: "R", title: "Excel職人の先輩", desc: "セル結合と罫線で、どんな帳票も城に変える。", motif: "grid" },
+        { id: "c-r-03", rarity: "R", title: "会議室キーパー", desc: "誰よりも会議室予約に詳しいが、自分の席には戻れない。", motif: "calendar" },
+        { id: "c-r-04", rarity: "R", title: "プリンター介護士", desc: "紙詰まりの音だけで機種を当てる。", motif: "printer" },
+        { id: "c-r-05", rarity: "R", title: "稟議スタンプ係", desc: "承認印の角度にだけ、ささやかな誇りがある。", motif: "stamp" },
+        { id: "c-r-06", rarity: "R", title: "終礼だけ元気な同期", desc: "一日の終わりにだけ、妙なテンションで現れる。", motif: "clock" },
+        { id: "c-r-07", rarity: "R", title: "眠気耐性の派遣さん", desc: "どんな長会議でも、まばたきの速度が変わらない。", motif: "coffee" },
+        { id: "c-r-08", rarity: "R", title: "名刺補充ウォッチャー", desc: "残り枚数を見ただけで、展示会の気配を察する。", motif: "card" },
+        { id: "c-r-09", rarity: "R", title: "共有席の放浪者", desc: "空いている席を求め、今日もフロアを漂う。", motif: "desk" },
+        { id: "c-r-10", rarity: "R", title: "電話取次ぎの達人", desc: "名前を聞き取れなくても、部署だけで着地させる。", motif: "phone" },
+
+        { id: "c-sr-01", rarity: "SR", title: "定時ダッシュ主任", desc: "18時の気配を察知するが、いつも直前で捕まる。", motif: "clock" },
+        { id: "c-sr-02", rarity: "SR", title: "謝罪メールの名手", desc: "申し訳ございませんを七色に使い分ける。", motif: "mail" },
+        { id: "c-sr-03", rarity: "SR", title: "議事録忍者", desc: "発言者不明の空気まで記録する。", motif: "note" },
+        { id: "c-sr-04", rarity: "SR", title: "予算調整の番人", desc: "数字の端数に、部門間の火種を見つける。", motif: "chart" },
+        { id: "c-sr-05", rarity: "SR", title: "根回しソムリエ", desc: "会議が始まる前に、会議の結論を寝かせておく。", motif: "network" },
+        { id: "c-sr-06", rarity: "SR", title: "朝会ファシリテーター", desc: "眠いフロアから、かろうじて発言を引き出す。", motif: "mic" },
+        { id: "c-sr-07", rarity: "SR", title: "資料整形マイスター", desc: "1pxのズレを見逃さない。内容より先に揃える。", motif: "slide" },
+        { id: "c-sr-08", rarity: "SR", title: "タスク棚卸し係長", desc: "終わった仕事を見つけるより、増えた仕事を数えるのが早い。", motif: "tasks" },
+        { id: "c-sr-09", rarity: "SR", title: "チャット既読管理人", desc: "未読数の増減で、現場の温度を測る。", motif: "chat" },
+        { id: "c-sr-10", rarity: "SR", title: "仕様確認ランナー", desc: "確認先を探して、部署と部署の間を走り続ける。", motif: "run" },
+
+        { id: "c-ssr-01", rarity: "SSR", title: "休日出勤エース", desc: "私服で会社にいる姿を誰も不思議に思わない。", motif: "office" },
+        { id: "c-ssr-02", rarity: "SSR", title: "炎上鎮火マネージャー", desc: "火元を見つける前に消火器を構えている。", motif: "fire" },
+        { id: "c-ssr-03", rarity: "SSR", title: "差し戻し予言者", desc: "レビュー前から赤字修正の位置が見えている。", motif: "review" },
+        { id: "c-ssr-04", rarity: "SSR", title: "部署横断調停者", desc: "全員が少しずつ不満な落としどころを作る。", motif: "bridge" },
+        { id: "c-ssr-05", rarity: "SSR", title: "夜間リリース指揮官", desc: "深夜のリリースボタンを、無表情で見つめる。", motif: "rocket" },
+        { id: "c-ssr-06", rarity: "SSR", title: "稟議突破コンサル", desc: "紙の迷宮に、承認ルートを一本だけ通す。", motif: "stamp" },
+        { id: "c-ssr-07", rarity: "SSR", title: "顧客謝罪フロント", desc: "一礼の角度で、場の空気を数分だけ延命する。", motif: "bow" },
+        { id: "c-ssr-08", rarity: "SSR", title: "会議圧縮プランナー", desc: "2時間会議を45分にし、宿題を3倍にする。", motif: "meeting" },
+
+        { id: "c-ur-01", rarity: "UR", title: "残業王クロダ", desc: "終電を逃してからが本番。勤怠表だけが彼を見ている。", motif: "crown" },
+        { id: "c-ur-02", rarity: "UR", title: "不夜城の部長", desc: "深夜2時の既読が、全社員の背筋を伸ばす。", motif: "tower" }
+      ],
+      skill: [
+        { id: "s-r-01", rarity: "R", title: "定時前の軽い確認", desc: "念のため、明日の朝までに見ておいてください。", motif: "check" },
+        { id: "s-r-02", rarity: "R", title: "Excel方眼紙の修正", desc: "セル結合の美しさについて、少しだけ相談です。", motif: "grid" },
+        { id: "s-r-03", rarity: "R", title: "議事録の言い回し調整", desc: "意味は同じですが、雰囲気だけ変えてください。", motif: "note" },
+        { id: "s-r-04", rarity: "R", title: "共有フォルダ迷子", desc: "あのファイル、どこに置きましたっけ。", motif: "folder" },
+        { id: "s-r-05", rarity: "R", title: "印刷機の紙詰まり", desc: "なぜか最後に触った人扱いになっています。", motif: "printer" },
+        { id: "s-r-06", rarity: "R", title: "朝イチ確認事項", desc: "朝イチと言いつつ、今送っておきます。", motif: "sun" },
+        { id: "s-r-07", rarity: "R", title: "添付ファイル忘れ", desc: "すみません、添付し直しました。これで3通目です。", motif: "clip" },
+        { id: "s-r-08", rarity: "R", title: "件名だけ至急", desc: "本文を読むと、そこまで至急ではありません。", motif: "mail" },
+        { id: "s-r-09", rarity: "R", title: "名前だけCC", desc: "関係ありそうで、関係ないようで、やっぱり少し関係ある。", motif: "cc" },
+        { id: "s-r-10", rarity: "R", title: "社内チャット既読", desc: "既読にした瞬間、担当者として扱われます。", motif: "chat" },
+
+        { id: "s-sr-01", rarity: "SR", title: "上長レビュー差し戻し", desc: "方向性は良いので、全部直してください。", motif: "review" },
+        { id: "s-sr-02", rarity: "SR", title: "緊急ではない緊急MTG", desc: "30分だけと言いつつ、資料もお願いします。", motif: "meeting" },
+        { id: "s-sr-03", rarity: "SR", title: "今日中の見積り再作成", desc: "数字は変えずに、印象だけ良くしてください。", motif: "chart" },
+        { id: "s-sr-04", rarity: "SR", title: "全員必読アンケート", desc: "回答時間は約3分です。設問は48問あります。", motif: "survey" },
+        { id: "s-sr-05", rarity: "SR", title: "仕様確認の無限往復", desc: "確認したいことを確認するための確認です。", motif: "loop" },
+        { id: "s-sr-06", rarity: "SR", title: "稟議差し替え", desc: "最新版という名前のファイルが、最新版ではありません。", motif: "stamp" },
+        { id: "s-sr-07", rarity: "SR", title: "週報フォーマット変更", desc: "今週から入力欄が増えました。今週分からお願いします。", motif: "form" },
+        { id: "s-sr-08", rarity: "SR", title: "客先都合の前倒し", desc: "先方の都合で、こちらの睡眠時間が削られます。", motif: "client" },
+        { id: "s-sr-09", rarity: "SR", title: "使途不明タスク", desc: "誰が依頼したか分からないのに、期限だけは明確です。", motif: "tasks" },
+        { id: "s-sr-10", rarity: "SR", title: "工数表再入力", desc: "システム移行のため、先月分からもう一度お願いします。", motif: "keyboard" },
+
+        { id: "s-ssr-01", rarity: "SSR", title: "金曜18時の至急対応", desc: "月曜朝までで大丈夫です。つまり今です。", motif: "clock" },
+        { id: "s-ssr-02", rarity: "SSR", title: "役員向け資料ゼロ戻し", desc: "方向性が変わったので、最初からお願いします。", motif: "slide" },
+        { id: "s-ssr-03", rarity: "SSR", title: "リリース直前の仕様変更", desc: "小さい変更です。影響範囲は全画面です。", motif: "rocket" },
+        { id: "s-ssr-04", rarity: "SSR", title: "休日出勤の打診", desc: "任意参加ですが、来られる前提で人数に入れました。", motif: "calendar" },
+        { id: "s-ssr-05", rarity: "SSR", title: "顧客前での公開謝罪", desc: "その場で原因と再発防止策を求められます。", motif: "bow" },
+        { id: "s-ssr-06", rarity: "SSR", title: "深夜の障害一次受け", desc: "通知音で起きた瞬間、担当者になります。", motif: "alert" },
+        { id: "s-ssr-07", rarity: "SSR", title: "予算凍結コンボ", desc: "お金は出ませんが、成果は予定通り必要です。", motif: "freeze" },
+        { id: "s-ssr-08", rarity: "SSR", title: "全部署巻き込み調整", desc: "参加者が増えるほど、決まることは減っていきます。", motif: "network" },
+
+        { id: "s-ur-01", rarity: "UR", title: "終電消滅プロジェクト", desc: "君にしか頼めない。なお期限は昨日です。", motif: "lasttrain" },
+        { id: "s-ur-02", rarity: "UR", title: "全社障害と未払い残業", desc: "原因調査、復旧、説明資料まで一気通貫でお願いします。", motif: "meltdown" }
+      ]
+    };
+
+    const specialEffects = [
+      { type: "overtime", mode: "overtime" },
+      { type: "bluescreen", mode: "bluescreen" },
+      { type: "phone", icon: "TEL", title: "社長から直通", copy: "画面が暗転し、番号非通知の着信が鳴り響く。" },
+      { type: "alert", icon: "!", title: "全社障害アラート", copy: "フロアの照明が赤く点滅し、監視画面が一斉に燃え上がる。" },
+      { type: "meeting", icon: "議", title: "役員会議招集", copy: "18:00ちょうどに、出席必須の会議招待が滑り込む。" },
+      { type: "audit", icon: "査", title: "監査ログ点灯", copy: "誰も見ていなかったログが、あなたの名前だけを照らす。" }
+    ];
+
+    const rarityPalettes = {
+      R: ["#64748b", "#1e293b", "#cbd5e1"],
+      SR: ["#0891b2", "#166534", "#99f6e4"],
+      SSR: ["#f59e0b", "#991b1b", "#fde68a"],
+      UR: ["#050608", "#7f1d1d", "#ff4d5e"]
+    };
+
+    const stage = document.getElementById("stage");
+    const button = document.getElementById("pullButton");
+    const againButton = document.getElementById("againButton");
+    const titleButton = document.getElementById("titleButton");
+    const galleryButton = document.getElementById("galleryButton");
+    const ratesButton = document.getElementById("ratesButton");
+    const galleryOverlay = document.getElementById("galleryOverlay");
+    const galleryClose = document.getElementById("galleryClose");
+    const galleryTabs = document.getElementById("galleryTabs");
+    const galleryGrid = document.getElementById("galleryGrid");
+    const ratesOverlay = document.getElementById("ratesOverlay");
+    const ratesClose = document.getElementById("ratesClose");
+    const ratesList = document.getElementById("ratesList");
+    const mailBoard = document.getElementById("mailBoard");
+    const clock = document.getElementById("clock");
+    const timeLabel = document.getElementById("timeLabel");
+    const pcIcon = document.getElementById("pcIcon");
+    const screenPanel = document.getElementById("screenPanel");
+    const screenMain = document.getElementById("screenMain");
+    const screenStatus = document.getElementById("screenStatus");
+    const statusText = document.getElementById("status");
+    const special = document.getElementById("special");
+    const flash = document.getElementById("flash");
+    const detailOverlay = document.getElementById("detailOverlay");
+    const detailImage = document.getElementById("detailImage");
+    const detailType = document.getElementById("detailType");
+    const detailRarity = document.getElementById("detailRarity");
+    const detailRarityLarge = document.getElementById("detailRarityLarge");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailDesc = document.getElementById("detailDesc");
+    const backButton = document.getElementById("backButton");
+    let busy = false;
+    let currentDraws = [];
+    let detailReturnMode = "result";
+    let activeGalleryRarity = "R";
+    const storageNamespace = "shachikuGacha20260604";
+    const ownedStorageKey = `${storageNamespace}:ownedIds`;
+    const collectionStorageKey = `${storageNamespace}:collectionCounts`;
+    const specialIndexStorageKey = `${storageNamespace}:specialIndex`;
+    const legacyStorageKeys = [
+      "shachikuGachaOwnedIds",
+      "shachikuGachaCollectionCounts",
+      "shachikuGachaSpecialIndexV2",
+    ];
+    const rarities = ["R", "SR", "SSR", "UR"];
+
+    function clearLegacyStorage() {
+      try {
+        legacyStorageKeys.forEach((key) => localStorage.removeItem(key));
+      } catch {
+        // The game still works if storage cleanup is unavailable.
+      }
+    }
+
+    clearLegacyStorage();
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function getCollection() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(collectionStorageKey) || "{}");
+        if (saved && !Array.isArray(saved) && typeof saved === "object") return saved;
+      } catch {
+        // Fall through to migration/default.
+      }
+      try {
+        const oldOwned = JSON.parse(localStorage.getItem(ownedStorageKey) || "[]");
+        if (Array.isArray(oldOwned)) {
+          const migrated = Object.fromEntries(oldOwned.map((id) => [id, 1]));
+          saveCollection(migrated);
+          return migrated;
+        }
+      } catch {
+        // The game still works if storage is unavailable.
+      }
+      return {};
+    }
+
+    function saveCollection(collection) {
+      try {
+        localStorage.setItem(collectionStorageKey, JSON.stringify(collection));
+        localStorage.setItem(ownedStorageKey, JSON.stringify(Object.keys(collection)));
+      } catch {
+        // The game still works if storage is unavailable; collection resets on reload.
+      }
+    }
+
+    function markNewItems(draws) {
+      const collection = getCollection();
+      const marked = draws.map((item) => {
+        const isNew = !collection[item.id];
+        collection[item.id] = (collection[item.id] || 0) + 1;
+        return { ...item, isNew };
+      });
+      saveCollection(collection);
+      return marked;
+    }
+
+    function nextSpecialEffect() {
+      let index = 0;
+      try {
+        index = Number(localStorage.getItem(specialIndexStorageKey) || "0");
+      } catch {
+        index = Math.floor(Math.random() * specialEffects.length);
+      }
+      const effect = specialEffects[index % specialEffects.length];
+      try {
+        localStorage.setItem(specialIndexStorageKey, String((index + 1) % specialEffects.length));
+      } catch {
+        // Ignore storage failures; the animation still plays.
+      }
+      return effect;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function hashOf(text) {
+      let hash = 2166136261;
+      for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    }
+
+    function rarityFor(slotIndex) {
+      const roll = Math.random() * 100;
+      if (slotIndex === 9) {
+        if (roll < 1) return "UR";
+        if (roll < 5) return "SSR";
+        return "SR";
+      }
+      if (roll < 1) return "UR";
+      if (roll < 5) return "SSR";
+      if (roll < 20) return "SR";
+      return "R";
+    }
+
+    function typeFor() {
+      return Math.random() < 0.25 ? "character" : "skill";
+    }
+
+    function pickItem(rarity) {
+      const type = typeFor();
+      const pool = items[type].filter((item) => item.rarity === rarity);
+      const base = pool[Math.floor(Math.random() * pool.length)];
+      return {
+        ...base,
+        type,
+        typeLabel: type === "character" ? "キャラ" : "スキル",
+        from: type === "character" ? "キャラ" : "社畜あるある"
+      };
+    }
+
+    function drawTen() {
+      return Array.from({ length: 10 }, (_, index) => pickItem(rarityFor(index)));
+    }
+
+    function allItems() {
+      return [
+        ...items.character.map((item) => ({ ...item, type: "character", typeLabel: "キャラ" })),
+        ...items.skill.map((item) => ({ ...item, type: "skill", typeLabel: "スキル" }))
+      ];
+    }
+
+    function motifSvg(item, size, full) {
+      const seed = hashOf(item.id);
+      const x = 42 + (seed % 22);
+      const y = full ? 104 + (seed % 34) : 42 + (seed % 16);
+      const scale = full ? 2.1 : 1;
+      const label = item.type === "character" ? "社員" : "業務";
+      const accent = rarityPalettes[item.rarity][2];
+      if (item.type === "character") {
+        return `
+          <g transform="translate(${full ? 118 + (seed % 80) : x} ${full ? 58 : y}) scale(${scale})">
+            <circle cx="52" cy="42" r="27" fill="#f8fafc" opacity="0.94"/>
+            <path d="M24 118c5-34 23-52 56-52s51 18 56 52v34H24z" fill="#111827"/>
+            <path d="M48 72h64l-12 50H60z" fill="${accent}" opacity="0.88"/>
+            <path d="M35 43c10-29 54-35 76-8 4 9 3 20-2 30-19-12-42-17-74-8-3-5-4-9 0-14z" fill="#0f172a"/>
+            <rect x="67" y="86" width="25" height="18" rx="4" fill="#f8fafc" opacity="0.92"/>
+            <text x="80" y="100" text-anchor="middle" font-size="12" font-weight="900" fill="#0f172a">${item.rarity}</text>
+            <text x="80" y="148" text-anchor="middle" font-size="14" font-weight="900" fill="#f8fafc">${label}</text>
+          </g>
+          <g transform="translate(${full ? 612 : 132} ${full ? 90 : 34}) scale(${full ? 2.2 : 0.72})" opacity="0.78">
+            ${motifMark(item.motif, accent)}
+          </g>
+        `;
+      }
+      return `
+        <g transform="translate(${full ? 128 + (seed % 96) : x - 8} ${full ? 86 : y - 8}) scale(${scale})">
+          <rect x="12" y="36" width="130" height="92" rx="12" fill="#f8fafc" opacity="0.95"/>
+          <path d="M20 46l57 43 57-43" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round" opacity="0.42"/>
+          <rect x="34" y="62" width="86" height="10" rx="5" fill="${accent}" opacity="0.9"/>
+          <rect x="34" y="84" width="62" height="9" rx="5" fill="#64748b" opacity="0.72"/>
+          <rect x="34" y="104" width="74" height="9" rx="5" fill="#64748b" opacity="0.54"/>
+          <circle cx="122" cy="112" r="26" fill="${accent}" opacity="0.95"/>
+          <text x="122" y="118" text-anchor="middle" font-size="20" font-weight="900" fill="#0f172a">${item.rarity}</text>
+        </g>
+        <g transform="translate(${full ? 616 : 132} ${full ? 94 : 38}) scale(${full ? 2.2 : 0.72})" opacity="0.8">
+          ${motifMark(item.motif, accent)}
+        </g>
+      `;
+    }
+
+    function motifMark(motif, color) {
+      const common = `fill="${color}" stroke="#f8fafc" stroke-width="5" stroke-linejoin="round"`;
+      const marks = {
+        memo: `<path ${common} d="M18 16h84v92H18z"/><path d="M34 42h52M34 64h40M34 86h48" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>`,
+        grid: `<rect ${common} x="14" y="18" width="92" height="82" rx="6"/><path d="M14 45h92M14 72h92M44 18v82M75 18v82" stroke="#0f172a" stroke-width="6"/>`,
+        calendar: `<rect ${common} x="14" y="22" width="94" height="80" rx="10"/><path d="M14 45h94" stroke="#0f172a" stroke-width="8"/><circle cx="42" cy="68" r="8" fill="#0f172a"/><circle cx="72" cy="68" r="8" fill="#0f172a"/>`,
+        printer: `<rect ${common} x="20" y="42" width="88" height="54" rx="8"/><rect x="34" y="12" width="60" height="40" rx="4" fill="#f8fafc"/><rect x="36" y="78" width="56" height="38" rx="4" fill="#0f172a"/>`,
+        stamp: `<path ${common} d="M44 16h36l8 38H36z"/><rect x="24" y="66" width="76" height="34" rx="8" fill="#0f172a"/><rect x="16" y="98" width="94" height="16" rx="8" fill="${color}"/>`,
+        clock: `<circle ${common} cx="64" cy="64" r="48"/><path d="M64 34v32l28 15" stroke="#0f172a" stroke-width="9" stroke-linecap="round"/>`,
+        coffee: `<path ${common} d="M26 48h64v34c0 20-15 32-32 32S26 102 26 82z"/><path d="M90 58h16c12 0 12 22 0 22H90" fill="none" stroke="#f8fafc" stroke-width="8"/>`,
+        card: `<rect ${common} x="18" y="28" width="90" height="66" rx="9"/><path d="M34 50h46M34 72h30" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>`,
+        desk: `<path ${common} d="M16 46h96v24H16z"/><path d="M32 70v42M96 70v42" stroke="#f8fafc" stroke-width="9" stroke-linecap="round"/>`,
+        phone: `<path ${common} d="M42 18h44v92H42z"/><circle cx="64" cy="94" r="7" fill="#0f172a"/><path d="M52 34h24" stroke="#0f172a" stroke-width="6" stroke-linecap="round"/>`,
+        mail: `<rect ${common} x="16" y="34" width="96" height="66" rx="8"/><path d="M18 42l46 34 46-34" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round"/>`,
+        note: `<path ${common} d="M24 14h72v100H24z"/><path d="M40 42h40M40 64h34M40 86h44" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>`,
+        chart: `<rect ${common} x="18" y="24" width="94" height="78" rx="8"/><path d="M34 84l20-22 18 12 24-34" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round"/>`,
+        network: `<circle ${common} cx="64" cy="32" r="18"/><circle ${common} cx="30" cy="88" r="18"/><circle ${common} cx="98" cy="88" r="18"/><path d="M55 48L38 72M73 48l17 24M48 88h32" stroke="#f8fafc" stroke-width="7"/>`,
+        mic: `<rect ${common} x="46" y="18" width="36" height="62" rx="18"/><path d="M30 62c0 24 16 38 34 38s34-14 34-38M64 100v18" fill="none" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>`,
+        slide: `<rect ${common} x="16" y="22" width="96" height="68" rx="8"/><path d="M38 110h52M64 90v20" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>`,
+        tasks: `<rect ${common} x="18" y="18" width="92" height="92" rx="10"/><path d="M38 44h48M38 66h48M38 88h48" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/><circle cx="28" cy="44" r="5" fill="#0f172a"/><circle cx="28" cy="66" r="5" fill="#0f172a"/><circle cx="28" cy="88" r="5" fill="#0f172a"/>`,
+        chat: `<path ${common} d="M18 26h92v62H54l-28 24V88h-8z"/><path d="M38 52h50M38 70h36" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>`,
+        run: `<path ${common} d="M70 20l24 18-20 20 28 32-16 14-32-34-14 38-22-7 18-54z"/><circle cx="58" cy="20" r="14" fill="#f8fafc"/>`,
+        office: `<path ${common} d="M22 20h84v90H22z"/><path d="M42 36h12M76 36h12M42 58h12M76 58h12M42 80h12M76 80h12" stroke="#0f172a" stroke-width="8" stroke-linecap="round"/>`,
+        fire: `<path ${common} d="M62 12c28 28 10 36 36 62 4 26-16 42-40 42S20 100 26 78c4-18 24-30 20-54 12 8 18 16 16 28 12-8 18-20 0-40z"/>`,
+        review: `<rect ${common} x="18" y="18" width="84" height="96" rx="8"/><path d="M38 52l16 16 36-40M38 86h42" fill="none" stroke="#0f172a" stroke-width="8" stroke-linecap="round"/>`,
+        bridge: `<path ${common} d="M16 86c24-44 72-44 96 0v24H16z"/><path d="M28 86h72M44 66v44M84 66v44" stroke="#0f172a" stroke-width="8"/>`,
+        rocket: `<path ${common} d="M66 12c30 24 30 58 6 86l-14-14-20 20-12-12 20-20-14-14c12-20 22-36 34-46z"/><circle cx="68" cy="44" r="10" fill="#0f172a"/>`,
+        bow: `<circle cx="64" cy="26" r="18" fill="#f8fafc"/><path ${common} d="M28 88c14-26 58-26 72 0l-20 24H48z"/><path d="M38 66c16 14 36 14 52 0" stroke="#0f172a" stroke-width="8" stroke-linecap="round"/>`,
+        meeting: `<rect ${common} x="16" y="54" width="96" height="36" rx="8"/><circle cx="34" cy="38" r="14" fill="#f8fafc"/><circle cx="64" cy="30" r="14" fill="#f8fafc"/><circle cx="94" cy="38" r="14" fill="#f8fafc"/>`,
+        crown: `<path ${common} d="M18 96l10-58 24 26 14-42 18 42 28-26-6 58z"/><path d="M24 96h84" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>`,
+        tower: `<path ${common} d="M34 18h60v96H34z"/><path d="M46 34h10M72 34h10M46 56h10M72 56h10M46 78h10M72 78h10" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>`,
+        check: `<circle ${common} cx="64" cy="64" r="48"/><path d="M38 66l18 18 36-42" fill="none" stroke="#0f172a" stroke-width="10" stroke-linecap="round"/>`,
+        folder: `<path ${common} d="M14 38h42l10 14h48v50H14z"/><path d="M14 52h100" stroke="#0f172a" stroke-width="7"/>`,
+        sun: `<circle ${common} cx="64" cy="64" r="26"/><path d="M64 12v18M64 98v18M12 64h18M98 64h18M28 28l14 14M86 86l14 14M100 28L86 42M42 86l-14 14" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>`,
+        clip: `<path d="M46 80l32-32c14-14 34 6 20 20l-38 38c-22 22-54-10-32-32l42-42" fill="none" stroke="${color}" stroke-width="13" stroke-linecap="round"/>`,
+        cc: `<circle ${common} cx="45" cy="64" r="30"/><circle ${common} cx="83" cy="64" r="30"/><path d="M48 54c-10-6-20 2-20 10s10 16 20 10M86 54c-10-6-20 2-20 10s10 16 20 10" fill="none" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>`,
+        survey: `<rect ${common} x="22" y="14" width="84" height="100" rx="8"/><path d="M42 42h42M42 66h42M42 90h42" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/><path d="M30 40l6 6 10-14M30 64l6 6 10-14M30 88l6 6 10-14" stroke="#0f172a" stroke-width="6" fill="none"/>`,
+        loop: `<path d="M34 50c18-26 54-24 68 0 12 20-2 46-28 42H58" fill="none" stroke="${color}" stroke-width="13" stroke-linecap="round"/><path d="M58 92l16-16 16 16" fill="none" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>`,
+        form: `<rect ${common} x="20" y="16" width="88" height="98" rx="8"/><path d="M38 42h52M38 64h52M38 86h32" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>`,
+        client: `<path ${common} d="M22 28h84v56H22z"/><path d="M36 100h56M64 84v16" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="56" r="16" fill="#0f172a"/>`,
+        keyboard: `<rect ${common} x="14" y="40" width="100" height="58" rx="10"/><path d="M30 58h10M50 58h10M70 58h10M90 58h10M30 78h50" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>`,
+        alert: `<path ${common} d="M64 14l54 96H10z"/><path d="M64 46v28M64 92v2" stroke="#0f172a" stroke-width="10" stroke-linecap="round"/>`,
+        freeze: `<path d="M64 12v104M20 38l88 52M108 38L20 90" stroke="${color}" stroke-width="12" stroke-linecap="round"/><circle cx="64" cy="64" r="20" fill="#f8fafc"/>`,
+        lasttrain: `<rect ${common} x="24" y="16" width="80" height="76" rx="12"/><circle cx="48" cy="72" r="10" fill="#0f172a"/><circle cx="80" cy="72" r="10" fill="#0f172a"/><path d="M34 108h60M42 92l-12 22M86 92l12 22" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>`,
+        meltdown: `<path ${common} d="M18 98c12-36 28-48 46-28 18-34 44-18 48 28z"/><path d="M42 28l14 28M80 18l-8 34M108 34L88 56" stroke="${color}" stroke-width="10" stroke-linecap="round"/>`
+      };
+      return marks[motif] || marks.memo;
+    }
+
+    function imageFor(item, mode) {
+      const full = mode === "full";
+      const width = full ? 960 : 240;
+      const height = full ? 540 : 240;
+      const palette = rarityPalettes[item.rarity];
+      const seed = hashOf(item.id + mode);
+      const accent = palette[2];
+      const bgA = palette[0];
+      const bgB = palette[1];
+      const gridOpacity = full ? 0.17 : 0.1;
+      const title = escapeHtml(item.title);
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+          <defs>
+            <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="${bgA}"/>
+              <stop offset="0.55" stop-color="${bgB}"/>
+              <stop offset="1" stop-color="#020617"/>
+            </linearGradient>
+            <radialGradient id="glow" cx="${32 + (seed % 42)}%" cy="${22 + (seed % 32)}%" r="58%">
+              <stop offset="0" stop-color="${accent}" stop-opacity="0.55"/>
+              <stop offset="1" stop-color="${accent}" stop-opacity="0"/>
+            </radialGradient>
+            <pattern id="grid" width="${full ? 54 : 24}" height="${full ? 54 : 24}" patternUnits="userSpaceOnUse">
+              <path d="M ${full ? 54 : 24} 0 L 0 0 0 ${full ? 54 : 24}" fill="none" stroke="#fff" stroke-opacity="${gridOpacity}" stroke-width="2"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#bg)"/>
+          <rect width="100%" height="100%" fill="url(#glow)"/>
+          <rect width="100%" height="100%" fill="url(#grid)"/>
+          <circle cx="${full ? 780 : 192}" cy="${full ? 84 : 44}" r="${full ? 170 : 46}" fill="${accent}" opacity="0.13"/>
+          <circle cx="${full ? 120 : 36}" cy="${full ? 432 : 204}" r="${full ? 190 : 58}" fill="#fff" opacity="0.08"/>
+          ${motifSvg(item, width, full)}
+          ${full ? `<text x="46" y="74" font-family="Segoe UI, sans-serif" font-size="34" font-weight="900" fill="#f8fafc" opacity="0.9">${title}</text>
+          <text x="50" y="112" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800" fill="${accent}" opacity="0.92">${item.typeLabel} / ${item.rarity}</text>` : `<text x="120" y="218" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="18" font-weight="900" fill="#f8fafc">${item.rarity}</text>`}
+        </svg>
+      `;
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
+    const assetVersion = "20260601-new-badge-fix";
+
+    function imageFor(item, mode) {
+      return `assets/gacha/${item.id}-${mode}.png?v=${assetVersion}`;
+    }
+
+    function unknownIcon() {
+      return `<div class="unknown-icon">?</div>`;
+    }
+
+    function renderGallery(rarity = activeGalleryRarity) {
+      activeGalleryRarity = rarity;
+      const collection = getCollection();
+      galleryTabs.innerHTML = rarities.map((entry) => `
+        <button class="rarity-tab ${entry === rarity ? "active" : ""}" type="button" data-rarity="${entry}">${entry}</button>
+      `).join("");
+      galleryGrid.innerHTML = allItems()
+        .filter((item) => item.rarity === rarity)
+        .map((item) => {
+          const count = collection[item.id] || 0;
+          const locked = count <= 0;
+          return `
+            <div class="gallery-card ${locked ? "locked" : ""}">
+              <button type="button" ${locked ? "disabled" : ""} data-id="${escapeHtml(item.id)}" aria-label="${escapeHtml(locked ? "未入手" : item.title)}">
+                ${locked ? unknownIcon() : `<img src="${imageFor(item, "icon")}" alt="${escapeHtml(item.title)} アイコン">`}
+              </button>
+              ${locked ? "" : `<span class="count-badge">x${count}</span>`}
+            </div>
+          `;
+        }).join("");
+    }
+
+    function showGallery() {
+      renderGallery();
+      galleryOverlay.classList.add("show");
+      galleryOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function hideGallery() {
+      galleryOverlay.classList.remove("show");
+      galleryOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    function percent(value) {
+      return `${Number(value.toFixed(3))}%`;
+    }
+
+    function rateGroup(type, rarity, slot) {
+      const typeRate = type === "character" ? 0.25 : 0.75;
+      const rarityRates = slot === "last"
+        ? { UR: 0.01, SSR: 0.04, SR: 0.95, R: 0 }
+        : { UR: 0.01, SSR: 0.04, SR: 0.15, R: 0.8 };
+      const pool = items[type].filter((item) => item.rarity === rarity);
+      const groupRate = typeRate * (rarityRates[rarity] || 0) * 100;
+      const itemRate = pool.length ? groupRate / pool.length : 0;
+      return { pool, groupRate, itemRate };
+    }
+
+    function renderRates() {
+      const sections = [
+        ["通常枠（1〜9枚目）", "normal"],
+        ["10枚目（SR以上確定）", "last"]
+      ];
+      ratesList.innerHTML = sections.map(([title, slot]) => `
+        <section class="rate-section">
+          <h3>${title}</h3>
+          ${["UR", "SSR", "SR", "R"].map((rarity) => ["character", "skill"].map((type) => {
+            const label = type === "character" ? "キャラ" : "スキル";
+            const { pool, groupRate, itemRate } = rateGroup(type, rarity, slot);
+            if (!pool.length || groupRate <= 0) return "";
+            return `
+              <div class="rate-row">
+                <strong>${label}${rarity}: ${percent(groupRate)}</strong>
+                <span>${pool.map((item) => `${escapeHtml(item.title)} ${percent(itemRate)}`).join(" / ")}</span>
+              </div>
+            `;
+          }).join("")).join("")}
+        </section>
+      `).join("");
+    }
+
+    function showRates() {
+      renderRates();
+      ratesList.scrollTop = 0;
+      ratesOverlay.classList.add("show");
+      ratesOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function hideRates() {
+      ratesOverlay.classList.remove("show");
+      ratesOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    function makeMail(item, index) {
+      const typeLabel = item.typeLabel || (item.type === "character" ? "キャラ" : "スキル");
+      const mail = document.createElement("article");
+      mail.className = `mail sealed ${item.rarity.toLowerCase()} ${item.type}`;
+      mail.style.animationDelay = `${index * 80}ms`;
+      mail.innerHTML = `
+        <div class="mail-card">
+          <div class="mail-head">
+            <div class="mail-from">${escapeHtml(item.from)}</div>
+          </div>
+          <div class="result-caption">
+            <span class="result-caption-type">${escapeHtml(typeLabel)}</span>
+            <strong class="result-caption-name">${escapeHtml(item.title)}</strong>
+            <span class="result-caption-rarity">${escapeHtml(item.rarity)}</span>
+          </div>
+          <div class="sealed-mail" aria-hidden="true">
+            <svg class="envelope-svg" viewBox="0 0 220 140" role="img" aria-label="メール">
+              <rect class="envelope-body" x="16" y="24" width="188" height="92" rx="10"></rect>
+              <path class="envelope-line" d="M22 31 L110 86 L198 31"></path>
+              <path class="envelope-line" d="M22 109 L84 70"></path>
+              <path class="envelope-line" d="M198 109 L136 70"></path>
+            </svg>
+          </div>
+          <button class="icon-button" type="button" data-index="${index}" aria-label="${escapeHtml(item.title)} の全体画像を表示">
+            <img src="${imageFor(item, "icon")}" alt="${escapeHtml(item.title)} アイコン">
+            ${item.isNew ? '<span class="new-badge">NEW</span>' : ""}
+          </button>
+          <div class="type-tag">${escapeHtml(typeLabel)}</div>
+          <div class="mail-body">
+            <div class="subject">${escapeHtml(item.title)}</div>
+            <div class="mail-preview">${escapeHtml(item.desc)}</div>
+          </div>
+          <div class="mail-foot">
+            <span>未読メール ${String(index + 1).padStart(2, "0")}</span>
+            <span>${item.rarity === "UR" ? "BLACK LEVEL MAX" : "要対応"}</span>
+          </div>
+        </div>
+      `;
+      return mail;
+    }
+
+    function resetScene() {
+      mailBoard.classList.remove("show");
+      mailBoard.replaceChildren();
+      clock.classList.add("instant");
+      clock.classList.remove("done", "overtime");
+      pcIcon.classList.remove("punch");
+      screenPanel.classList.remove("bluescreen");
+      special.className = "special";
+      special.replaceChildren();
+      flash.classList.remove("pop");
+      detailOverlay.setAttribute("aria-hidden", "true");
+      hideGallery();
+      hideRates();
+      timeLabel.textContent = "9:00";
+      void clock.offsetWidth;
+      requestAnimationFrame(() => clock.classList.remove("instant"));
+      screenMain.textContent = "退勤待機中";
+      screenStatus.textContent = "ステータス: 仕事は終わった気がする";
+    }
+
+    async function animateClock() {
+      const times = ["10:30", "12:00", "15:00", "17:30", "18:00"];
+      for (const time of times) {
+        timeLabel.textContent = time;
+        await wait(210);
+      }
+      clock.classList.add("done");
+      await wait(620);
+    }
+
+    async function playOvertimeSpecial() {
+      flash.classList.remove("emergency-pop");
+      void flash.offsetWidth;
+      flash.classList.add("emergency-pop");
+      special.className = "special emergency";
+      special.innerHTML = `
+        <div class="special-card">
+          <div class="special-icon">EMERGENCY</div>
+          <h2 class="special-title">退勤失敗警報</h2>
+          <p class="special-copy">18:00を過ぎても、未処理アラートが止まらない。</p>
+        </div>
+      `;
+      special.classList.add("show");
+      await wait(2600);
+      special.classList.remove("show");
+      flash.classList.remove("emergency-pop");
+      await wait(240);
+      const times = ["18:30", "21:00", "23:30", "00:00", "02:00"];
+      for (const time of times) {
+        timeLabel.textContent = time;
+        await wait(360);
+      }
+      clock.classList.add("overtime");
+      await playSpecial({
+        type: "emergency",
+        icon: "02:00",
+        title: "深夜二時 着地",
+        copy: "定時退勤のはずが、時計だけがブラック案件の真実を告げる。"
+      });
+      await wait(500);
+    }
+
+    async function playBlueScreenSpecial() {
+      screenPanel.classList.add("bluescreen");
+      await wait(1900);
+      screenPanel.classList.remove("bluescreen");
+      await wait(320);
+    }
+
+    async function playSpecial(effect) {
+      special.className = `special ${effect.type}`;
+      special.innerHTML = `
+        <div class="special-card">
+          <div class="special-icon">${escapeHtml(effect.icon)}</div>
+          <h2 class="special-title">${escapeHtml(effect.title)}</h2>
+          <p class="special-copy">${escapeHtml(effect.copy)}</p>
+        </div>
+      `;
+      special.classList.add("show");
+      await wait(3000);
+      special.classList.remove("show");
+      await wait(180);
+    }
+
+    async function revealMails(draws) {
+      mailBoard.classList.add("show");
+      draws.forEach((item, index) => mailBoard.appendChild(makeMail(item, index)));
+      await wait(70);
+      [...mailBoard.children].forEach((mail, index) => {
+        setTimeout(() => mail.classList.add("in"), index * 90);
+      });
+      await wait(980);
+      [...mailBoard.children].forEach((mail, index) => {
+        setTimeout(() => {
+          mail.classList.add("opening");
+          setTimeout(() => {
+            mail.classList.remove("sealed", "opening");
+            mail.classList.add("opened");
+          }, 500);
+        }, index * 125);
+      });
+      await wait(1780);
+    }
+
+    function openDetail(index) {
+      const item = currentDraws[index];
+      if (!item) return;
+      detailReturnMode = "result";
+      openItemDetail(item);
+    }
+
+    function openItemDetail(item) {
+      detailImage.src = imageFor(item, "full");
+      detailImage.alt = `${item.title} 全体画像`;
+      detailType.textContent = item.typeLabel || (item.type === "character" ? "キャラ" : "スキル");
+      detailRarity.textContent = item.rarity;
+      detailRarityLarge.textContent = item.rarity;
+      detailRarityLarge.dataset.rarity = item.rarity;
+      detailTitle.textContent = item.title;
+      detailDesc.textContent = item.desc;
+      detailOverlay.setAttribute("aria-hidden", "false");
+      stage.classList.remove("result", "intro-mode");
+      stage.classList.add("detail");
+    }
+
+    function closeDetail() {
+      detailOverlay.setAttribute("aria-hidden", "true");
+      stage.classList.remove("detail");
+      if (detailReturnMode === "gallery") {
+        stage.classList.add("intro-mode");
+        showGallery();
+      } else {
+        stage.classList.add("result");
+      }
+      detailReturnMode = "result";
+    }
+
+    async function pullTen() {
+      if (busy) return;
+      busy = true;
+      button.disabled = true;
+      againButton.disabled = true;
+      titleButton.disabled = true;
+      resetScene();
+      stage.classList.remove("intro-mode", "result", "detail");
+      stage.classList.add("playing");
+
+      const draws = markNewItems(drawTen());
+      currentDraws = draws;
+      const hasUr = draws.some((item) => item.rarity === "UR");
+      const specialEffect = hasUr && Math.random() < 0.7 ? nextSpecialEffect() : null;
+      const willSpecial = Boolean(specialEffect);
+      const best = hasUr ? "UR" : draws.some((item) => item.rarity === "SSR") ? "SSR" : "SR";
+      const characterCount = draws.filter((item) => item.type === "character").length;
+
+      statusText.textContent = "9:00から18:00まで時計が進みます...";
+      screenStatus.textContent = "ステータス: 退勤チャンス接近中";
+      await wait(450);
+      await animateClock();
+      if (specialEffect && specialEffect.mode === "overtime") {
+        await playOvertimeSpecial();
+      }
+
+      statusText.textContent = "ノートPCで退勤打刻中...";
+      screenMain.textContent = "退勤打刻";
+      screenStatus.textContent = "ステータス: 勤怠を送信しています";
+      pcIcon.classList.add("punch");
+      await wait(620);
+      if (specialEffect && specialEffect.mode === "bluescreen") {
+        await playBlueScreenSpecial();
+      }
+
+      screenMain.textContent = "打刻完了";
+      screenStatus.textContent = "ステータス: 未読メールを受信しました";
+      flash.classList.add("pop");
+      await wait(240);
+
+      if (specialEffect && !specialEffect.mode) {
+        statusText.textContent = "ブラック案件の気配...";
+        await playSpecial(specialEffect);
+      }
+
+      statusText.textContent = "未読メール10通を開封中...";
+      await revealMails(draws);
+
+      stage.classList.remove("playing");
+      stage.classList.add("result");
+      if (best === "UR") {
+        statusText.textContent = willSpecial ? `URブラック案件、特殊演出つきで着弾。キャラ${characterCount}件 / スキル${10 - characterCount}件` : `URブラック案件が着弾。キャラ${characterCount}件 / スキル${10 - characterCount}件`;
+      } else if (best === "SSR") {
+        statusText.textContent = `SSR級の残業フラグが着弾。キャラ${characterCount}件 / スキル${10 - characterCount}件`;
+      } else {
+        statusText.textContent = `SR以上1枚確定。キャラ${characterCount}件 / スキル${10 - characterCount}件`;
+      }
+      againButton.disabled = false;
+      titleButton.disabled = false;
+      busy = false;
+    }
+
+    button.addEventListener("click", pullTen);
+    againButton.addEventListener("click", pullTen);
+    galleryButton.addEventListener("click", showGallery);
+    ratesButton.addEventListener("click", showRates);
+    galleryClose.addEventListener("click", hideGallery);
+    ratesClose.addEventListener("click", hideRates);
+    galleryTabs.addEventListener("click", (event) => {
+      const target = event.target.closest(".rarity-tab");
+      if (!target) return;
+      renderGallery(target.dataset.rarity);
+    });
+    galleryGrid.addEventListener("click", (event) => {
+      const target = event.target.closest("button[data-id]");
+      if (!target || target.disabled) return;
+      const item = allItems().find((entry) => entry.id === target.dataset.id);
+      if (!item) return;
+      hideGallery();
+      detailReturnMode = "gallery";
+      openItemDetail(item);
+    });
+    titleButton.addEventListener("click", () => {
+      if (busy) return;
+      resetScene();
+      currentDraws = [];
+      button.disabled = false;
+      againButton.disabled = false;
+      titleButton.disabled = false;
+      stage.classList.remove("playing", "result", "detail");
+      stage.classList.add("intro-mode");
+    });
+    backButton.addEventListener("click", closeDetail);
+    mailBoard.addEventListener("click", (event) => {
+      const target = event.target.closest(".icon-button");
+      if (!target || !stage.classList.contains("result")) return;
+      openDetail(Number(target.dataset.index));
+    });
+  </script>
+</body>
+</html>
+
