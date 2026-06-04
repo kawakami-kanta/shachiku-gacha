@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="build-revision" content="2026-06-04-detail-image-preload">
+  <meta name="build-revision" content="2026-06-04-webp-assets">
   <title>社畜10連ガチャ</title>
   <style>
     :root {
@@ -63,7 +63,7 @@
       z-index: 0;
       background:
         linear-gradient(180deg, rgba(3, 7, 12, 0.28), rgba(3, 7, 12, 0.62)),
-        url("assets/backgrounds/anime-office-bg.png") center / cover no-repeat;
+        url("assets/backgrounds/anime-office-bg.webp") center / cover no-repeat;
       opacity: 0.82;
       transition: opacity 0.45s ease, filter 0.45s ease;
       pointer-events: none;
@@ -2540,10 +2540,10 @@
       return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
     }
 
-    const assetVersion = "20260601-new-badge-fix";
+    const assetVersion = "20260604-webp";
 
     function imageFor(item, mode) {
-      return `assets/gacha/${item.id}-${mode}.png?v=${assetVersion}`;
+      return `assets/gacha/${item.id}-${mode}.webp?v=${assetVersion}`;
     }
 
     function unknownIcon() {
