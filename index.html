@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="build-revision" content="2026-06-04-portrait-detail-balance">
+  <meta name="build-revision" content="2026-06-04-detail-image-preload">
   <title>社畜10連ガチャ</title>
   <style>
     :root {
@@ -1228,6 +1228,11 @@
         radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.82), transparent 28%),
         linear-gradient(145deg, #f8fafc, #dce6f1);
       mix-blend-mode: normal;
+      transition: opacity 0.16s ease;
+    }
+
+    .detail-card img.is-loading {
+      opacity: 0;
     }
 
     .detail-rarity-large {
@@ -2266,6 +2271,7 @@
     let busy = false;
     let currentDraws = [];
     let detailReturnMode = "result";
+    let detailImageLoadToken = 0;
     let activeGalleryRarity = "R";
     const storageNamespace = "shachikuGacha20260604";
     const ownedStorageKey = `${storageNamespace}:ownedIds`;
@@ -2780,8 +2786,12 @@
     }
 
     function openItemDetail(item) {
-      detailImage.src = imageFor(item, "full");
-      detailImage.alt = `${item.title} 全体画像`;
+      const imageSrc = imageFor(item, "full");
+      const imageAlt = `${item.title} 全体画像`;
+      const imageToken = ++detailImageLoadToken;
+      detailImage.classList.add("is-loading");
+      detailImage.alt = "";
+      detailImage.removeAttribute("src");
       detailType.textContent = item.typeLabel || (item.type === "character" ? "キャラ" : "スキル");
       detailRarity.textContent = item.rarity;
       detailRarityLarge.textContent = item.rarity;
@@ -2791,9 +2801,26 @@
       detailOverlay.setAttribute("aria-hidden", "false");
       stage.classList.remove("result", "intro-mode");
       stage.classList.add("detail");
+
+      const preloadedImage = new Image();
+      preloadedImage.onload = () => {
+        if (imageToken !== detailImageLoadToken) return;
+        detailImage.src = imageSrc;
+        detailImage.alt = imageAlt;
+        detailImage.classList.remove("is-loading");
+      };
+      preloadedImage.onerror = () => {
+        if (imageToken !== detailImageLoadToken) return;
+        detailImage.alt = `${item.title} 画像を読み込めませんでした`;
+      };
+      preloadedImage.src = imageSrc;
     }
 
     function closeDetail() {
+      detailImageLoadToken += 1;
+      detailImage.classList.add("is-loading");
+      detailImage.alt = "";
+      detailImage.removeAttribute("src");
       detailOverlay.setAttribute("aria-hidden", "true");
       stage.classList.remove("detail");
       if (detailReturnMode === "gallery") {
